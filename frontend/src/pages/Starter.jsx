@@ -46,7 +46,10 @@ export default function Starter({ apiUrl }) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
+    // Only show loading spinner on initial load, not when switching starters
+    if (!starter) {
+      setLoading(true)
+    }
     setError(null)
 
     Promise.all([
