@@ -63,7 +63,13 @@ export default function NewStarter({ apiUrl }) {
           if (!res.ok) throw new Error('Parent starter not found')
           return res.json()
         })
-        .then(setParentStarter)
+        .then((parent) => {
+          setParentStarter(parent)
+          setStarterType(parent.starter_type)
+          if (parent.starter_type === 'other' && parent.type_other) {
+            setTypeOther(parent.type_other)
+          }
+        })
         .catch((err) => setError(err.message))
     }
   }, [apiUrl, parentWords])
@@ -143,6 +149,8 @@ export default function NewStarter({ apiUrl }) {
               id="type"
               value={starterType}
               onChange={(e) => setStarterType(e.target.value)}
+              disabled={!!parentWords}
+              className={parentWords ? 'disabled' : ''}
             >
               {STARTER_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -150,6 +158,9 @@ export default function NewStarter({ apiUrl }) {
                 </option>
               ))}
             </select>
+            {parentWords && (
+              <span className="field-hint">Inherited from parent</span>
+            )}
           </div>
 
           {starterType === 'other' && (
@@ -161,6 +172,8 @@ export default function NewStarter({ apiUrl }) {
                 value={typeOther}
                 onChange={(e) => setTypeOther(e.target.value)}
                 placeholder="e.g., Tibicos, Viili"
+                disabled={!!parentWords}
+                className={parentWords ? 'disabled' : ''}
               />
             </div>
           )}

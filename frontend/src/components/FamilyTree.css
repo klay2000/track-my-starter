@@ -1,32 +1,9 @@
 .family-tree {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 10px 0;
-}
-
-.family-tree svg {
-  display: block;
-  min-width: 100%;
-}
-
-.tree-node {
-  cursor: pointer;
-  transition: transform 0.15s, filter 0.15s;
-}
-
-.tree-node:hover {
-  filter: brightness(0.95);
-}
-
-.family-tree g:hover .tree-node {
-  transform: scale(1.1);
-}
-
-.tree-label {
-  font-size: 11px;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  fill: #6b5e4d;
-  pointer-events: none;
+  height: 350px;
+  width: 100%;
+  border-radius: 8px;
+  background: #faf8f5;
+  border: 1px solid #e8e0d4;
 }
 
 .family-tree-empty {
@@ -35,4 +12,92 @@
   justify-content: center;
   min-height: 200px;
   color: #9a8b78;
+}
+
+/* Custom node styling */
+.starter-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.starter-node-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f8f4ed;
+  border: 2px solid #d4a574;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.starter-node:hover .starter-node-circle {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(180, 140, 100, 0.3);
+}
+
+.starter-node-current .starter-node-circle {
+  width: 28px;
+  height: 28px;
+  background: #d4a574;
+  border: 3px solid #b07d4f;
+}
+
+.starter-node-inner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #b07d4f;
+}
+
+.starter-node-label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  color: #6b5e4d;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Hide the connection handles */
+.node-handle {
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+/* React Flow overrides */
+.react-flow__node {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.react-flow__edge-path {
+  stroke: #d4a574;
+  stroke-width: 2;
+}
+
+.react-flow__controls {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  border: 1px solid #e8e0d4;
+}
+
+.react-flow__controls-button {
+  background: #faf8f5;
+  border-bottom: 1px solid #e8e0d4;
+  color: #6b5e4d;
+}
+
+.react-flow__controls-button:hover {
+  background: #f0ebe3;
+}
+
+.react-flow__background {
+  background: #faf8f5;
 }

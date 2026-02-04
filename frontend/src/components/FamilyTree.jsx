@@ -1,12 +1,43 @@
-import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import * as d3 from 'd3'
+import { useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  Handle,
+  Position,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import './FamilyTree.css'
 
+function StarterNode({ data }) {
+  const { label, isCurrent, onClick } = data
+
+  return (
+    <div
+      className={`starter-node ${isCurrent ? 'starter-node-current' : ''}`}
+      onClick={onClick}
+    >
+      <Handle type="target" position={Position.Top} className="node-handle" />
+      <div className="starter-node-circle">
+        {isCurrent && <div className="starter-node-inner" />}
+      </div>
+      <div className="starter-node-label">{label}</div>
+      <Handle type="source" position={Position.Bottom} className="node-handle" />
+    </div>
+  )
+}
+
+const nodeTypes = {
+  starter: StarterNode,
+}
+
 export default function FamilyTree({ tree, currentWords }) {
-  const { nodes: layoutNodes, links, width, height } = useMemo(() => {
+  const navigate = useNavigate()
+
+  const { nodes, edges } = useMemo(() => {
     if (!tree || !tree.nodes || tree.nodes.length === 0) {
-      return { nodes: [], links: [], width: 0, height: 0 }
+      return { nodes: [], edges: [] }
     }
 
     // Build a map of all nodes by their word ID
@@ -37,47 +68,87 @@ export default function FamilyTree({ tree, currentWords }) {
       }
     }
 
-    // Fallback: if no root found, use the first node
     if (!rootNode && tree.nodes.length > 0) {
       rootNode = nodeMap.get(tree.nodes[0].words.join('-'))
     }
 
     if (!rootNode) {
-      return { nodes: [], links: [], width: 0, height: 0 }
+      return { nodes: [], edges: [] }
     }
 
-    // Build d3 hierarchy
-    const hierarchy = d3.hierarchy(rootNode)
-    const treeLayout = d3.tree().nodeSize([140, 100])
-    treeLayout(hierarchy)
+    // Calculate positions using BFS (vertical layout for direct lineage)
+    const flowNodes = []
+    const flowEdges = []
+    const nodeSpacingY = 100
+    const nodeSpacingX = 160
 
-    const nodes = hierarchy.descendants()
-    const links = hierarchy.links()
+    // BFS to assign positions
+    const queue = [{ node: rootNode, depth: 0, index: 0, parentX: 0 }]
+    const depthCounts = new Map() // Track nodes at each depth for horizontal spacing
 
-    // Calculate bounds
-    let minX = Infinity, maxX = -Infinity
-    let minY = Infinity, maxY = -Infinity
-    nodes.forEach((n) => {
-      minX = Math.min(minX, n.x)
-      maxX = Math.max(maxX, n.x)
-      minY = Math.min(minY, n.y)
-      maxY = Math.max(maxY, n.y)
-    })
+    // First pass: count nodes at each depth
+    const countQueue = [{ node: rootNode, depth: 0 }]
+    while (countQueue.length > 0) {
+      const { node, depth } = countQueue.shift()
+      depthCounts.set(depth, (depthCounts.get(depth) || 0) + 1)
+      node.children.forEach((child) => {
+        countQueue.push({ node: child, depth: depth + 1 })
+      })
+    }
 
-    const padding = 80
-    const width = maxX - minX + padding * 2
-    const height = maxY - minY + padding * 2
+    // Second pass: assign positions
+    const depthIndices = new Map()
+    const processQueue = [{ node: rootNode, depth: 0 }]
 
-    // Normalize positions
-    nodes.forEach((n) => {
-      n.x = n.x - minX + padding
-      n.y = n.y - minY + padding
-    })
+    while (processQueue.length > 0) {
+      const { node, depth } = processQueue.shift()
+      const countAtDepth = depthCounts.get(depth) || 1
+      const currentIndex = depthIndices.get(depth) || 0
+      depthIndices.set(depth, currentIndex + 1)
 
-    return { nodes, links, width: Math.max(width, 300), height: Math.max(height, 200) }
-  }, [tree])
+      // Center nodes horizontally
+      const totalWidth = (countAtDepth - 1) * nodeSpacingX
+      const startX = -totalWidth / 2
+      const x = startX + currentIndex * nodeSpacingX
+      const y = depth * nodeSpacingY
 
-  if (!layoutNodes.length) {
+      const isCurrent = node.id === currentWords
+      const displayLabel = node.name || node.id.split('-').slice(1, 3).join('-')
+
+      flowNodes.push({
+        id: node.id,
+        type: 'starter',
+        position: { x, y },
+        data: {
+          label: displayLabel,
+          isCurrent,
+          onClick: () => navigate(`/${node.id}`),
+        },
+      })
+
+      // Add edges and queue children
+      node.children.forEach((child) => {
+        flowEdges.push({
+          id: `${node.id}-${child.id}`,
+          source: node.id,
+          target: child.id,
+          style: { stroke: '#d4a574', strokeWidth: 2 },
+          animated: false,
+        })
+        processQueue.push({ node: child, depth: depth + 1 })
+      })
+    }
+
+    return { nodes: flowNodes, edges: flowEdges }
+  }, [tree, currentWords, navigate])
+
+  const onNodeClick = useCallback((event, node) => {
+    if (node.data.onClick) {
+      node.data.onClick()
+    }
+  }, [])
+
+  if (nodes.length === 0) {
     return (
       <div className="family-tree-empty">
         <p>No family tree data available</p>
@@ -87,60 +158,25 @@ export default function FamilyTree({ tree, currentWords }) {
 
   return (
     <div className="family-tree">
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-        <defs>
-          <linearGradient id="linkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e8e0d4" />
-            <stop offset="100%" stopColor="#d4a574" />
-          </linearGradient>
-        </defs>
-
-        {links.map((link, i) => (
-          <path
-            key={i}
-            d={`M${link.source.x},${link.source.y}
-                C${link.source.x},${(link.source.y + link.target.y) / 2}
-                 ${link.target.x},${(link.source.y + link.target.y) / 2}
-                 ${link.target.x},${link.target.y}`}
-            fill="none"
-            stroke="url(#linkGradient)"
-            strokeWidth={2}
-            opacity={0.6}
-          />
-        ))}
-
-        {layoutNodes.map((node) => {
-          const isCurrent = node.data.id === currentWords
-          const displayLabel = node.data.name || node.data.id.split('-').slice(1, 3).join('-')
-
-          return (
-            <g key={node.data.id} transform={`translate(${node.x},${node.y})`}>
-              <Link to={`/${node.data.id}`}>
-                <circle
-                  r={isCurrent ? 12 : 10}
-                  fill={isCurrent ? '#d4a574' : '#f8f4ed'}
-                  stroke={isCurrent ? '#b07d4f' : '#d4a574'}
-                  strokeWidth={isCurrent ? 3 : 2}
-                  className="tree-node"
-                />
-                {isCurrent && (
-                  <circle
-                    r={6}
-                    fill="#b07d4f"
-                  />
-                )}
-                <text
-                  y={28}
-                  textAnchor="middle"
-                  className="tree-label"
-                >
-                  {displayLabel}
-                </text>
-              </Link>
-            </g>
-          )
-        })}
-      </svg>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodeClick={onNodeClick}
+        fitView
+        fitViewOptions={{ padding: 0.3 }}
+        minZoom={0.5}
+        maxZoom={2}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        panOnDrag={true}
+        zoomOnScroll={true}
+        preventScrolling={false}
+      >
+        <Background color="#e8e0d4" gap={20} />
+        <Controls showInteractive={false} />
+      </ReactFlow>
     </div>
   )
 }
