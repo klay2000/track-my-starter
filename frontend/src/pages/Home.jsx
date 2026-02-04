@@ -3,21 +3,48 @@ import { Link, useNavigate } from 'react-router-dom'
 import Globe from 'react-globe.gl'
 import './Home.css'
 
-// Fetch country polygons for stylized look
+// Fetch geographic data for stylized look
 const COUNTRIES_URL = 'https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson'
+const STATES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_1_states_provinces_lines.geojson'
+const LAKES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_lakes.geojson'
 
 export default function Home({ apiUrl }) {
   const [starters, setStarters] = useState([])
   const [countries, setCountries] = useState([])
+  const [stateBorders, setStateBorders] = useState([])
+  const [lakes, setLakes] = useState([])
   const [loading, setLoading] = useState(true)
   const globeRef = useRef()
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Load countries for polygon rendering
+    // Load geographic data for polygon rendering
     fetch(COUNTRIES_URL)
       .then((res) => res.json())
       .then((data) => setCountries(data.features))
+      .catch(console.error)
+
+    fetch(STATES_URL)
+      .then((res) => res.json())
+      .then((data) => {
+        // Flatten MultiLineString into individual LineStrings
+        const paths = []
+        data.features.forEach((feature) => {
+          if (feature.geometry.type === 'MultiLineString') {
+            feature.geometry.coordinates.forEach((coords) => {
+              paths.push({ coords })
+            })
+          } else if (feature.geometry.type === 'LineString') {
+            paths.push({ coords: feature.geometry.coordinates })
+          }
+        })
+        setStateBorders(paths)
+      })
+      .catch(console.error)
+
+    fetch(LAKES_URL)
+      .then((res) => res.json())
+      .then((data) => setLakes(data.features))
       .catch(console.error)
   }, [])
 
@@ -88,11 +115,21 @@ export default function Home({ apiUrl }) {
               showAtmosphere={true}
               atmosphereColor="#c9a066"
               atmosphereAltitude={0.15}
-              polygonsData={countries}
-              polygonCapColor={() => '#e8ddd0'}
-              polygonSideColor={() => '#d4c4b0'}
-              polygonStrokeColor={() => '#c9a066'}
-              polygonAltitude={0.005}
+              polygonsData={[
+                ...countries.map(f => ({ ...f, _type: 'land' })),
+                ...lakes.map(f => ({ ...f, _type: 'water' }))
+              ]}
+              polygonCapColor={(d) => d._type === 'water' ? '#a8c8d8' : '#e8ddd0'}
+              polygonSideColor={(d) => d._type === 'water' ? '#8ab4c8' : '#d4c4b0'}
+              polygonStrokeColor={(d) => d._type === 'water' ? '#8ab4c8' : '#c9a066'}
+              polygonAltitude={(d) => d._type === 'water' ? 0.006 : 0.005}
+              pathsData={stateBorders}
+              pathPoints="coords"
+              pathPointLat={(p) => p[1]}
+              pathPointLng={(p) => p[0]}
+              pathColor={() => 'rgba(180, 160, 130, 0.6)'}
+              pathStroke={0.3}
+              pathAltitude={0.007}
               pointsData={pointsData}
               pointLat="lat"
               pointLng="lng"
