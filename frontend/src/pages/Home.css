@@ -1,0 +1,134 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 100%);
+  padding: 40px 20px;
+}
+
+.home-content {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 1200px;
+}
+
+.home-hero {
+  flex: 1;
+  max-width: 480px;
+}
+
+.home-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.home-tagline {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.home-stats {
+  margin-top: 24px;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.home-globe {
+  flex-shrink: 0;
+  width: 550px;
+  height: 550px;
+  position: relative;
+  background: radial-gradient(circle at center, #2d2519 0%, #1a1510 100%);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.globe-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--color-text-muted);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Globe tooltip styles (injected into DOM) */
+:global(.globe-tooltip) {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: inherit;
+}
+
+:global(.globe-tooltip strong) {
+  display: block;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #2d2519;
+}
+
+:global(.globe-tooltip span) {
+  font-size: 0.8rem;
+  color: #6b5e4d;
+  text-transform: capitalize;
+}
+
+@media (max-width: 1100px) {
+  .home-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .home-hero {
+    max-width: 100%;
+  }
+
+  .home-hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .home-globe {
+    width: 100%;
+    max-width: 500px;
+    height: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .home {
+    padding: 20px;
+  }
+
+  .home-globe {
+    max-width: 100%;
+    height: 350px;
+  }
+
+  .home-tagline {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,38 @@
+.family-tree {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 0;
+}
+
+.family-tree svg {
+  display: block;
+  min-width: 100%;
+}
+
+.tree-node {
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.tree-node:hover {
+  filter: brightness(0.95);
+}
+
+.family-tree g:hover .tree-node {
+  transform: scale(1.1);
+}
+
+.tree-label {
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  fill: #6b5e4d;
+  pointer-events: none;
+}
+
+.family-tree-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #9a8b78;
+}
