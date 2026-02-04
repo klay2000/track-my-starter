@@ -14,8 +14,25 @@ export default function Home({ apiUrl }) {
   const [stateBorders, setStateBorders] = useState([])
   const [lakes, setLakes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [globeSize, setGlobeSize] = useState(550)
   const globeRef = useRef()
+  const globeContainerRef = useRef()
   const navigate = useNavigate()
+
+  // Update globe size on resize
+  useEffect(() => {
+    const updateSize = () => {
+      if (globeContainerRef.current) {
+        const container = globeContainerRef.current
+        const size = Math.min(container.offsetWidth, container.offsetHeight)
+        setGlobeSize(size)
+      }
+    }
+
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [loading])
 
   useEffect(() => {
     // Load geographic data for polygon rendering
@@ -100,7 +117,7 @@ export default function Home({ apiUrl }) {
           )}
         </div>
 
-        <div className="home-globe">
+        <div className="home-globe" ref={globeContainerRef}>
           {loading ? (
             <div className="globe-loading">
               <div className="loading-spinner" />
@@ -143,8 +160,8 @@ export default function Home({ apiUrl }) {
                   <span>${d.type.replace(/_/g, ' ')}</span>
                 </div>
               `}
-              width={550}
-              height={550}
+              width={globeSize}
+              height={globeSize}
             />
           )}
         </div>

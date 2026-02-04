@@ -206,12 +206,54 @@ input.disabled {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
+  .new-starter-nav {
+    padding: 16px;
+  }
+
+  .new-starter-layout {
+    padding: 16px 16px 32px;
+    gap: 32px;
+  }
+
   .new-starter-map {
     height: 300px;
+    border-radius: var(--radius-sm);
+  }
+
+  .form-header {
+    margin-bottom: 24px;
+  }
+
+  .form-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .modal {
+    padding: 24px;
+    margin: 16px;
   }
 
   .modal-actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 380px) {
+  .new-starter-map {
+    height: 250px;
+  }
+
+  .form-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .map-hint {
+    font-size: 0.8rem;
+    padding: 8px 16px;
   }
 }

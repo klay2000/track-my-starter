@@ -4,6 +4,19 @@
   border-radius: 8px;
   background: #faf8f5;
   border: 1px solid #e8e0d4;
+  touch-action: pan-x pan-y;
+}
+
+@media (max-width: 600px) {
+  .family-tree {
+    height: 280px;
+  }
+}
+
+@media (max-width: 380px) {
+  .family-tree {
+    height: 240px;
+  }
 }
 
 .family-tree-empty {

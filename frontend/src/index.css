@@ -186,4 +186,25 @@ input::placeholder {
     padding: 14px 24px;
     font-size: 1rem;
   }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  input, select, textarea {
+    padding: 10px 14px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+}
+
+@media (max-width: 380px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.1rem; }
+
+  .btn-large {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+  }
 }
