@@ -16,6 +16,7 @@ function App() {
         <Route path="/:words" element={<Starter apiUrl={API_URL} />} />
         <Route path="/:words/new" element={<NewStarter apiUrl={API_URL} />} />
       </Routes>
+      <footer className="site-footer">Zoe Smith 2026</footer>
     </div>
   )
 }
