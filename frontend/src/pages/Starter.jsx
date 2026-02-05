@@ -147,7 +147,8 @@ export default function Starter({ apiUrl }) {
     )
   }
 
-  const displayName = starter.name || TYPE_LABELS[starter.starter_type] || 'Starter'
+  const hasName = !!starter.name
+  const displayName = starter.name || starter.words.join('-')
   const typeLabel = starter.starter_type === 'other' && starter.type_other
     ? starter.type_other
     : TYPE_LABELS[starter.starter_type]
@@ -168,7 +169,7 @@ export default function Starter({ apiUrl }) {
       <header className="starter-header">
         <span className="badge">{typeLabel}</span>
         <h1>{displayName}</h1>
-        <p className="starter-words">{starter.words.join('-')}</p>
+        {hasName && <p className="starter-words">{starter.words.join('-')}</p>}
         <div className="starter-actions">
           <button onClick={copyUrl} className="btn btn-secondary">
             {copied ? 'Copied!' : 'Copy Link'}
@@ -200,6 +201,7 @@ export default function Starter({ apiUrl }) {
                 const isCurrent = node.is_target
                 const color = nodeColors[nodeWords] || NODE_COLORS[0]
                 const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
+                const hasName = !!node.name
                 const displayName = node.name || nodeWords
 
                 return (
@@ -210,7 +212,7 @@ export default function Starter({ apiUrl }) {
                           {isCurrent ? 'Current' : TYPE_LABELS[node.starter_type] || 'Starter'}
                         </span>
                         <p className="popup-name">{displayName}</p>
-                        <p className="popup-words">{nodeWords}</p>
+                        {hasName && <p className="popup-words">{nodeWords}</p>}
                         {!isCurrent && (
                           <button
                             className="popup-link"

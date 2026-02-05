@@ -122,6 +122,7 @@ export default function Explore({ apiUrl }) {
             ]
             const wordsStr = starter.words.join('-')
             const typeLabel = TYPE_LABELS[starter.starter_type] || starter.starter_type
+            const hasName = !!starter.name
             const displayName = starter.name || wordsStr
 
             return (
@@ -130,7 +131,7 @@ export default function Explore({ apiUrl }) {
                   <div className="explore-popup">
                     <span className="popup-type">{typeLabel}</span>
                     <p className="popup-name">{displayName}</p>
-                    <p className="popup-words">{wordsStr}</p>
+                    {hasName && <p className="popup-words">{wordsStr}</p>}
                     <button
                       className="popup-link"
                       onClick={() => navigate(`/${wordsStr}`)}
