@@ -22,12 +22,13 @@ MAX_TREE_NODES = 100
 async def list_starters():
     db = get_db()
     starters = await db.starters.find(
-        {}, {"words": 1, "starter_type": 1, "location": 1}
+        {}, {"words": 1, "name": 1, "starter_type": 1, "location": 1}
     ).to_list(10000)
 
     return [
         StarterMapItem(
             words=s["words"],
+            name=s.get("name"),
             starter_type=s["starter_type"],
             location=Location(**s["location"]),
         )
@@ -88,6 +89,7 @@ async def get_starter_tree(words_param: str):
                 "name": doc.get("name"),
                 "starter_type": doc["starter_type"],
                 "is_target": is_target,
+                "location": doc["location"],
                 "_id": node_id,
             }
             return True
@@ -149,6 +151,7 @@ async def get_starter_tree(words_param: str):
             name=n["name"],
             starter_type=n["starter_type"],
             is_target=n["is_target"],
+            location=Location(**n["location"]),
         )
         for n in nodes_dict.values()
     ]

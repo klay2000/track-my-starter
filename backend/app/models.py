@@ -69,6 +69,7 @@ class StarterResponse(BaseModel):
 
 class StarterMapItem(BaseModel):
     words: list[str]
+    name: Optional[str] = None
     starter_type: str
     location: Location
 
@@ -78,6 +79,7 @@ class TreeNode(BaseModel):
     name: Optional[str] = None
     starter_type: str
     is_target: bool = False
+    location: Location
 
 
 class TreeResponse(BaseModel):

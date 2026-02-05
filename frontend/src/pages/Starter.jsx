@@ -1,22 +1,44 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import FamilyTree from '../components/FamilyTree'
 import 'leaflet/dist/leaflet.css'
 import './Starter.css'
 
-// Custom marker icon
-const markerIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-      <circle cx="12" cy="12" r="10" fill="#d4a574" stroke="#b07d4f" stroke-width="2"/>
-      <circle cx="12" cy="12" r="4" fill="#b07d4f"/>
-    </svg>
-  `),
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-})
+// Distinct color palette for nodes
+const NODE_COLORS = [
+  { fill: '#f59e0b', stroke: '#d97706' }, // amber
+  { fill: '#10b981', stroke: '#059669' }, // emerald
+  { fill: '#8b5cf6', stroke: '#7c3aed' }, // violet
+  { fill: '#ec4899', stroke: '#db2777' }, // pink
+  { fill: '#06b6d4', stroke: '#0891b2' }, // cyan
+  { fill: '#f97316', stroke: '#ea580c' }, // orange
+  { fill: '#84cc16', stroke: '#65a30d' }, // lime
+  { fill: '#6366f1', stroke: '#4f46e5' }, // indigo
+  { fill: '#14b8a6', stroke: '#0d9488' }, // teal
+  { fill: '#ef4444', stroke: '#dc2626' }, // red
+  { fill: '#a855f7', stroke: '#9333ea' }, // purple
+  { fill: '#eab308', stroke: '#ca8a04' }, // yellow
+]
+
+// Create marker icon with custom colors
+function createMarkerIcon(fillColor, strokeColor, isCurrent = false) {
+  const size = isCurrent ? 36 : 28
+  const r = isCurrent ? 14 : 10
+  const innerR = isCurrent ? 6 : 4
+  const center = size / 2
+  return new L.Icon({
+    iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+        <circle cx="${center}" cy="${center}" r="${r}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${isCurrent ? 3 : 2}"/>
+        <circle cx="${center}" cy="${center}" r="${innerR}" fill="${strokeColor}"/>
+      </svg>
+    `),
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
 
 const TYPE_LABELS = {
   sourdough: 'Sourdough',
@@ -29,21 +51,45 @@ const TYPE_LABELS = {
   other: 'Other',
 }
 
-function MapController({ center }) {
+function FitBounds({ nodes, currentWords }) {
   const map = useMap()
   useEffect(() => {
-    map.setView(center, 10)
-  }, [map, center])
+    if (nodes.length === 0) return
+
+    if (nodes.length === 1) {
+      const node = nodes[0]
+      map.setView([node.location.coordinates[1], node.location.coordinates[0]], 10)
+    } else {
+      const bounds = L.latLngBounds(
+        nodes.map((n) => [n.location.coordinates[1], n.location.coordinates[0]])
+      )
+      map.fitBounds(bounds, { padding: [50, 50] })
+    }
+  }, [map, nodes, currentWords])
   return null
 }
 
 export default function Starter({ apiUrl }) {
   const { words } = useParams()
+  const navigate = useNavigate()
   const [starter, setStarter] = useState(null)
   const [tree, setTree] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+
+  // Generate unique colors for each node
+  const nodeColors = useMemo(() => {
+    if (!tree?.nodes) return {}
+
+    const colors = {}
+    tree.nodes.forEach((node, index) => {
+      const nodeWords = node.words.join('-')
+      const color = NODE_COLORS[index % NODE_COLORS.length]
+      colors[nodeWords] = color
+    })
+    return colors
+  }, [tree])
 
   useEffect(() => {
     // Only show loading spinner on initial load, not when switching starters
@@ -135,20 +181,49 @@ export default function Starter({ apiUrl }) {
 
       <div className="starter-content">
         <section className="starter-section">
-          <h2>Location</h2>
+          <h2>Family Locations</h2>
           <div className="starter-map">
             <MapContainer
               center={position}
               zoom={10}
-              scrollWheelZoom={false}
+              scrollWheelZoom={true}
               style={{ height: '100%', width: '100%' }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <Marker position={position} icon={markerIcon} />
-              <MapController center={position} />
+              {tree && <FitBounds nodes={tree.nodes} currentWords={words} />}
+              {tree?.nodes.map((node) => {
+                const nodeWords = node.words.join('-')
+                const pos = [node.location.coordinates[1], node.location.coordinates[0]]
+                const isCurrent = node.is_target
+                const color = nodeColors[nodeWords] || NODE_COLORS[0]
+                const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
+                const displayName = node.name || nodeWords
+
+                return (
+                  <Marker key={nodeWords} position={pos} icon={icon}>
+                    <Popup>
+                      <div className="map-popup">
+                        <span className="popup-label" style={{ background: color.stroke }}>
+                          {isCurrent ? 'Current' : TYPE_LABELS[node.starter_type] || 'Starter'}
+                        </span>
+                        <p className="popup-name">{displayName}</p>
+                        <p className="popup-words">{nodeWords}</p>
+                        {!isCurrent && (
+                          <button
+                            className="popup-link"
+                            onClick={() => navigate(`/${nodeWords}`)}
+                          >
+                            View Details →
+                          </button>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              })}
             </MapContainer>
           </div>
         </section>
@@ -156,7 +231,7 @@ export default function Starter({ apiUrl }) {
         <section className="starter-section starter-section-tree">
           <h2>Family Tree</h2>
           <div className="tree-container">
-            {tree && <FamilyTree tree={tree} currentWords={words} />}
+            {tree && <FamilyTree tree={tree} currentWords={words} nodeColors={nodeColors} />}
           </div>
           {tree?.truncated && (
             <p className="text-muted" style={{ textAlign: 'center', marginTop: 12 }}>

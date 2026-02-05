@@ -40,8 +40,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #f8f4ed;
-  border: 2px solid #d4a574;
+  background: #d4a574;
+  border: 2px solid #b07d4f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,21 +50,25 @@
 
 .starter-node:hover .starter-node-circle {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(180, 140, 100, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .starter-node-current .starter-node-circle {
-  width: 28px;
-  height: 28px;
-  background: #d4a574;
-  border: 3px solid #b07d4f;
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
 }
 
 .starter-node-inner {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #b07d4f;
+}
+
+.starter-node-current .starter-node-inner {
+  width: 12px;
+  height: 12px;
 }
 
 .starter-node-label {

@@ -11,7 +11,16 @@ import '@xyflow/react/dist/style.css'
 import './FamilyTree.css'
 
 function StarterNode({ data }) {
-  const { label, isCurrent, onClick } = data
+  const { label, isCurrent, onClick, color } = data
+
+  const circleStyle = color ? {
+    background: color.fill,
+    borderColor: color.stroke,
+  } : {}
+
+  const innerStyle = color ? {
+    background: color.stroke,
+  } : {}
 
   return (
     <div
@@ -19,8 +28,8 @@ function StarterNode({ data }) {
       onClick={onClick}
     >
       <Handle type="target" position={Position.Top} className="node-handle" />
-      <div className="starter-node-circle">
-        {isCurrent && <div className="starter-node-inner" />}
+      <div className="starter-node-circle" style={circleStyle}>
+        <div className="starter-node-inner" style={innerStyle} />
       </div>
       <div className="starter-node-label">{label}</div>
       <Handle type="source" position={Position.Bottom} className="node-handle" />
@@ -32,7 +41,7 @@ const nodeTypes = {
   starter: StarterNode,
 }
 
-export default function FamilyTree({ tree, currentWords }) {
+export default function FamilyTree({ tree, currentWords, nodeColors = {} }) {
   const navigate = useNavigate()
 
   const { nodes, edges } = useMemo(() => {
@@ -122,6 +131,7 @@ export default function FamilyTree({ tree, currentWords }) {
         data: {
           label: displayLabel,
           isCurrent,
+          color: nodeColors[node.id],
           onClick: () => navigate(`/${node.id}`),
         },
       })
@@ -140,7 +150,7 @@ export default function FamilyTree({ tree, currentWords }) {
     }
 
     return { nodes: flowNodes, edges: flowEdges }
-  }, [tree, currentWords, navigate])
+  }, [tree, currentWords, navigate, nodeColors])
 
   const onNodeClick = useCallback((event, node) => {
     if (node.data.onClick) {
