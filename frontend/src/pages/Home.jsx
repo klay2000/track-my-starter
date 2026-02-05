@@ -107,9 +107,14 @@ export default function Home({ apiUrl }) {
           <p className="home-tagline">
             Follow the journey of fermented starters around the world
           </p>
-          <Link to="/new" className="btn btn-large">
-            Add My Starter
-          </Link>
+          <div className="home-actions">
+            <Link to="/new" className="btn btn-large">
+              Add My Starter
+            </Link>
+            <Link to="/explore" className="btn btn-large btn-secondary">
+              Explore Map
+            </Link>
+          </div>
           {!loading && starters.length > 0 && (
             <p className="home-stats">
               {starters.length} starter{starters.length !== 1 ? 's' : ''} tracked worldwide
