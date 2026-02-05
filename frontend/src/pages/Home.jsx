@@ -28,6 +28,33 @@ function extractBorders(features) {
   return paths
 }
 
+const STARTER_TYPES = [
+  'sourdough starter',
+  'kombucha starter',
+  'kefir starter',
+  'ginger bug starter',
+  'friendship bread',
+  'jun starter',
+  'other ferments'
+]
+
+function RotatingType() {
+  const [typeIndex, setTypeIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTypeIndex((prev) => (prev + 1) % STARTER_TYPES.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <span className="rotating-type">
+      <span key={typeIndex} className="rotating-type-text">{STARTER_TYPES[typeIndex]}</span>
+    </span>
+  )
+}
+
 export default function Home({ apiUrl }) {
   const [starters, setStarters] = useState([])
   const [countries, setCountries] = useState([])
@@ -101,6 +128,7 @@ export default function Home({ apiUrl }) {
     }
   }, [loading])
 
+
   const pointsData = starters.map((s) => ({
     lat: s.location.coordinates[1],
     lng: s.location.coordinates[0],
@@ -118,7 +146,9 @@ export default function Home({ apiUrl }) {
         <div className="home-hero">
           <h1>Track My Starter</h1>
           <p className="home-tagline">
-            Follow the journey of fermented starters around the world
+            Follow the journey of your<br />
+            <RotatingType /><br />
+            around the world!
           </p>
           <div className="home-actions">
             <Link to="/new" className="btn btn-large">

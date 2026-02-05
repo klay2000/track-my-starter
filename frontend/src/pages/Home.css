@@ -33,6 +33,31 @@
   color: var(--color-text-secondary);
   margin-bottom: 32px;
   line-height: 1.5;
+  text-align: center;
+}
+
+.rotating-type {
+  display: inline-block;
+  border-bottom: 2px dotted var(--color-accent);
+  color: var(--color-text);
+  font-weight: 500;
+  padding-bottom: 2px;
+}
+
+.rotating-type-text {
+  display: inline-block;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .home-actions {
