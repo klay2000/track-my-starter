@@ -5,16 +5,29 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './Explore.css'
 
-const markerIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-      <circle cx="12" cy="12" r="10" fill="#d4a574" stroke="#b07d4f" stroke-width="2"/>
-      <circle cx="12" cy="12" r="4" fill="#b07d4f"/>
-    </svg>
-  `),
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-})
+const TYPE_COLORS = {
+  sourdough: { fill: '#f59e0b', stroke: '#d97706' },
+  friendship_bread: { fill: '#ec4899', stroke: '#db2777' },
+  kefir_milk: { fill: '#06b6d4', stroke: '#0891b2' },
+  kefir_water: { fill: '#10b981', stroke: '#059669' },
+  kombucha: { fill: '#8b5cf6', stroke: '#7c3aed' },
+  ginger_bug: { fill: '#f97316', stroke: '#ea580c' },
+  jun: { fill: '#84cc16', stroke: '#65a30d' },
+  other: { fill: '#6b7280', stroke: '#4b5563' },
+}
+
+function createMarkerIcon(fillColor, strokeColor) {
+  return new L.Icon({
+    iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
+        <circle cx="12" cy="12" r="10" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="${strokeColor}"/>
+      </svg>
+    `),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  })
+}
 
 const TYPE_LABELS = {
   sourdough: 'Sourdough',
@@ -124,12 +137,14 @@ export default function Explore({ apiUrl }) {
             const typeLabel = TYPE_LABELS[starter.starter_type] || starter.starter_type
             const hasName = !!starter.name
             const displayName = starter.name || wordsStr
+            const color = TYPE_COLORS[starter.starter_type] || TYPE_COLORS.other
+            const icon = createMarkerIcon(color.fill, color.stroke)
 
             return (
-              <Marker key={wordsStr} position={position} icon={markerIcon}>
+              <Marker key={wordsStr} position={position} icon={icon}>
                 <Popup>
                   <div className="explore-popup">
-                    <span className="popup-type">{typeLabel}</span>
+                    <span className="popup-type" style={{ background: color.stroke }}>{typeLabel}</span>
                     <p className="popup-name">{displayName}</p>
                     {hasName && <p className="popup-words">{wordsStr}</p>}
                     <button
