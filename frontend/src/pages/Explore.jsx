@@ -109,7 +109,7 @@ export default function Explore({ apiUrl }) {
     <div className="explore-page">
       <nav className="explore-nav">
         <Link to="/" className="nav-back">
-          ← Back to Globe
+          ← Back to Home
         </Link>
         <div className="explore-count">
           {starters.length} starter{starters.length !== 1 ? 's' : ''}

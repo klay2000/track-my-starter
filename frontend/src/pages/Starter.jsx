@@ -162,7 +162,7 @@ export default function Starter({ apiUrl }) {
     <div className="starter-page">
       <nav className="starter-nav">
         <Link to="/" className="nav-back">
-          ← Back to Map
+          ← Back to Home
         </Link>
       </nav>
 

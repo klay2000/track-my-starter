@@ -115,7 +115,7 @@ export default function NewStarter({ apiUrl }) {
     <div className="new-starter-page">
       <nav className="new-starter-nav">
         <Link to={parentWords ? `/${parentWords}` : '/'} className="nav-back">
-          ← {parentWords ? 'Back to Parent' : 'Back to Map'}
+          ← {parentWords ? 'Back to Parent' : 'Back to Home'}
         </Link>
       </nav>
 
