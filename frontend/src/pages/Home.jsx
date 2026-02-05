@@ -1,23 +1,51 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Globe from 'react-globe.gl'
+import * as THREE from 'three'
 import './Home.css'
 
 // Fetch geographic data for stylized look
 const COUNTRIES_URL = 'https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson'
-const STATES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_1_states_provinces_lines.geojson'
 const LAKES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_lakes.geojson'
+
+// Extract border paths from GeoJSON polygons
+function extractBorders(features) {
+  const paths = []
+  features.forEach((feature) => {
+    const geom = feature.geometry
+    if (geom.type === 'Polygon') {
+      geom.coordinates.forEach((ring) => {
+        paths.push({ coords: ring })
+      })
+    } else if (geom.type === 'MultiPolygon') {
+      geom.coordinates.forEach((polygon) => {
+        polygon.forEach((ring) => {
+          paths.push({ coords: ring })
+        })
+      })
+    }
+  })
+  return paths
+}
 
 export default function Home({ apiUrl }) {
   const [starters, setStarters] = useState([])
   const [countries, setCountries] = useState([])
-  const [stateBorders, setStateBorders] = useState([])
+  const [borders, setBorders] = useState([])
   const [lakes, setLakes] = useState([])
   const [loading, setLoading] = useState(true)
   const [globeSize, setGlobeSize] = useState(550)
   const globeRef = useRef()
   const globeContainerRef = useRef()
   const navigate = useNavigate()
+
+  // Create globe material for ocean color
+  const globeMaterial = useMemo(() => {
+    return new THREE.MeshPhongMaterial({
+      color: new THREE.Color('#7dd3fc'),
+      transparent: false,
+    })
+  }, [])
 
   // Update globe size on resize
   useEffect(() => {
@@ -38,24 +66,9 @@ export default function Home({ apiUrl }) {
     // Load geographic data for polygon rendering
     fetch(COUNTRIES_URL)
       .then((res) => res.json())
-      .then((data) => setCountries(data.features))
-      .catch(console.error)
-
-    fetch(STATES_URL)
-      .then((res) => res.json())
       .then((data) => {
-        // Flatten MultiLineString into individual LineStrings
-        const paths = []
-        data.features.forEach((feature) => {
-          if (feature.geometry.type === 'MultiLineString') {
-            feature.geometry.coordinates.forEach((coords) => {
-              paths.push({ coords })
-            })
-          } else if (feature.geometry.type === 'LineString') {
-            paths.push({ coords: feature.geometry.coordinates })
-          }
-        })
-        setStateBorders(paths)
+        setCountries(data.features)
+        setBorders(extractBorders(data.features))
       })
       .catch(console.error)
 
@@ -84,7 +97,7 @@ export default function Home({ apiUrl }) {
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.4
       controls.enableZoom = false
-      globeRef.current.pointOfView({ lat: 20, lng: 0, altitude: 2.2 })
+      globeRef.current.pointOfView({ lat: 35, lng: -95, altitude: 2.2 })
     }
   }, [loading])
 
@@ -131,27 +144,28 @@ export default function Home({ apiUrl }) {
           ) : (
             <Globe
               ref={globeRef}
-              backgroundColor="rgba(0,0,0,0)"
-              globeImageUrl={null}
+              backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+              globeMaterial={globeMaterial}
               showGlobe={true}
               showAtmosphere={true}
-              atmosphereColor="#c9a066"
-              atmosphereAltitude={0.15}
+              atmosphereColor="#7dd3fc"
+              atmosphereAltitude={0.12}
+              animateIn={false}
               polygonsData={[
                 ...countries.map(f => ({ ...f, _type: 'land' })),
                 ...lakes.map(f => ({ ...f, _type: 'water' }))
               ]}
-              polygonCapColor={(d) => d._type === 'water' ? '#a8c8d8' : '#e8ddd0'}
-              polygonSideColor={(d) => d._type === 'water' ? '#8ab4c8' : '#d4c4b0'}
-              polygonStrokeColor={(d) => d._type === 'water' ? '#8ab4c8' : '#c9a066'}
-              polygonAltitude={(d) => d._type === 'water' ? 0.006 : 0.005}
-              pathsData={stateBorders}
+              polygonCapColor={(d) => d._type === 'water' ? '#7dd3fc' : '#e8ddd0'}
+              polygonSideColor={(d) => d._type === 'water' ? '#7dd3fc' : '#d4c4b0'}
+              polygonStrokeColor={() => false}
+              polygonAltitude={(d) => d._type === 'water' ? 0.012 : 0.01}
+              pathsData={borders}
               pathPoints="coords"
               pathPointLat={(p) => p[1]}
               pathPointLng={(p) => p[0]}
-              pathColor={() => 'rgba(180, 160, 130, 0.6)'}
-              pathStroke={0.3}
-              pathAltitude={0.007}
+              pathColor={() => '#b07d4f'}
+              pathStroke={1}
+              pathAltitude={0.011}
               pointsData={pointsData}
               pointLat="lat"
               pointLng="lng"
