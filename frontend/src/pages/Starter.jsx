@@ -56,9 +56,16 @@ function FitBounds({ nodes, currentWords }) {
   useEffect(() => {
     if (nodes.length === 0) return
 
-    if (nodes.length === 1) {
+    // Find the current node and center on it
+    const currentNode = nodes.find((n) => n.is_target)
+    if (currentNode) {
+      map.setView(
+        [currentNode.location.coordinates[1], currentNode.location.coordinates[0]],
+        6
+      )
+    } else if (nodes.length === 1) {
       const node = nodes[0]
-      map.setView([node.location.coordinates[1], node.location.coordinates[0]], 10)
+      map.setView([node.location.coordinates[1], node.location.coordinates[0]], 6)
     } else {
       const bounds = L.latLngBounds(
         nodes.map((n) => [n.location.coordinates[1], n.location.coordinates[0]])
@@ -167,84 +174,12 @@ export default function Starter({ apiUrl }) {
       </nav>
 
       <header className="starter-header">
-        <span className="badge">{typeLabel}</span>
-        <h1>{displayName}</h1>
-        {hasName && <p className="starter-words">{starter.words.join('-')}</p>}
-        <div className="starter-actions">
-          <button onClick={copyUrl} className="btn btn-secondary">
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
-          <Link to={`/${words}/new`} className="btn">
-            Add Descendant
-          </Link>
+        <div className="starter-title">
+          <h1>{displayName}</h1>
+          <span className="badge">{typeLabel}</span>
         </div>
-      </header>
-
-      <div className="starter-content">
-        <section className="starter-section">
-          <h2>Family Locations</h2>
-          <div className="starter-map">
-            <MapContainer
-              center={position}
-              zoom={10}
-              scrollWheelZoom={true}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {tree && <FitBounds nodes={tree.nodes} currentWords={words} />}
-              {tree?.nodes.map((node) => {
-                const nodeWords = node.words.join('-')
-                const pos = [node.location.coordinates[1], node.location.coordinates[0]]
-                const isCurrent = node.is_target
-                const color = nodeColors[nodeWords] || NODE_COLORS[0]
-                const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
-                const hasName = !!node.name
-                const displayName = node.name || nodeWords
-
-                return (
-                  <Marker key={nodeWords} position={pos} icon={icon}>
-                    <Popup>
-                      <div className="map-popup">
-                        <span className="popup-label" style={{ background: color.stroke }}>
-                          {isCurrent ? 'Current' : TYPE_LABELS[node.starter_type] || 'Starter'}
-                        </span>
-                        <p className="popup-name">{displayName}</p>
-                        {hasName && <p className="popup-words">{nodeWords}</p>}
-                        {!isCurrent && (
-                          <button
-                            className="popup-link"
-                            onClick={() => navigate(`/${nodeWords}`)}
-                          >
-                            View Details →
-                          </button>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                )
-              })}
-            </MapContainer>
-          </div>
-        </section>
-
-        <section className="starter-section starter-section-tree">
-          <h2>Family Tree</h2>
-          <div className="tree-container">
-            {tree && <FamilyTree tree={tree} currentWords={words} nodeColors={nodeColors} />}
-          </div>
-          {tree?.truncated && (
-            <p className="text-muted" style={{ textAlign: 'center', marginTop: 12 }}>
-              Showing first 100 nodes
-            </p>
-          )}
-        </section>
-      </div>
-
-      <footer className="starter-footer">
-        <p>
+        {hasName && <p className="starter-words">{starter.words.join('-')}</p>}
+        <p className="starter-meta">
           Created {new Date(starter.created_at).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -259,7 +194,77 @@ export default function Starter({ apiUrl }) {
             </>
           )}
         </p>
-      </footer>
+        <div className="starter-actions">
+          <button onClick={copyUrl} className="btn btn-secondary">
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+          <Link to={`/${words}/new`} className="btn">
+            Add Descendant
+          </Link>
+        </div>
+      </header>
+
+      <div className="starter-content">
+        <div className="starter-map-section">
+          <div className="starter-map">
+            <MapContainer
+            center={position}
+            zoom={10}
+            scrollWheelZoom={true}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {tree && <FitBounds nodes={tree.nodes} currentWords={words} />}
+            {tree?.nodes.map((node) => {
+              const nodeWords = node.words.join('-')
+              const pos = [node.location.coordinates[1], node.location.coordinates[0]]
+              const isCurrent = node.is_target
+              const color = nodeColors[nodeWords] || NODE_COLORS[0]
+              const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
+              const hasName = !!node.name
+              const displayName = node.name || nodeWords
+
+              return (
+                <Marker key={nodeWords} position={pos} icon={icon}>
+                  <Popup>
+                    <div className="map-popup">
+                      <span className="popup-label" style={{ background: color.stroke }}>
+                        {isCurrent ? 'Current' : TYPE_LABELS[node.starter_type] || 'Starter'}
+                      </span>
+                      <p className="popup-name">{displayName}</p>
+                      {hasName && <p className="popup-words">{nodeWords}</p>}
+                      {!isCurrent && (
+                        <button
+                          className="popup-link"
+                          onClick={() => navigate(`/${nodeWords}`)}
+                        >
+                          View Details →
+                        </button>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              )
+            })}
+          </MapContainer>
+          </div>
+        </div>
+
+        <div className="starter-tree">
+          <div className="tree-container">
+            {tree && <FamilyTree tree={tree} currentWords={words} nodeColors={nodeColors} />}
+          </div>
+          {tree?.truncated && (
+            <p className="text-muted" style={{ textAlign: 'center', marginTop: 12 }}>
+              Showing first 100 nodes
+            </p>
+          )}
+        </div>
+      </div>
+
     </div>
   )
 }
