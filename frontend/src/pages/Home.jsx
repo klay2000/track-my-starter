@@ -44,7 +44,7 @@ function RotatingType() {
   useEffect(() => {
     const interval = setInterval(() => {
       setTypeIndex((prev) => (prev + 1) % ROTATING_TYPES.length)
-    }, 5000)
+    }, 2500)
     return () => clearInterval(interval)
   }, [])
 
@@ -120,6 +120,7 @@ export default function Home({ apiUrl }) {
     lat: s.location.coordinates[1],
     lng: s.location.coordinates[0],
     words: s.words.join('-'),
+    name: s.name,
     type: s.starter_type,
   }))
 
@@ -189,7 +190,7 @@ export default function Home({ apiUrl }) {
               onPointClick={handlePointClick}
               pointLabel={(d) => `
                 <div class="globe-tooltip">
-                  <strong>${d.words}</strong>
+                  <strong>${d.name || d.words}</strong>
                   <span>${d.type.replace(/_/g, ' ')}</span>
                 </div>
               `}
