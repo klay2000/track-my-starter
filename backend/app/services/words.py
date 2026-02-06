@@ -20,12 +20,10 @@ def load_words():
         WORDS = [line.strip().lower() for line in f if line.strip()]
 
 
-def generate_word_id(first_word: str | None = None) -> list[str]:
+def generate_word_id() -> list[str]:
     if not WORDS:
         load_words()
 
-    if first_word:
-        return [first_word, random.choice(WORDS), random.choice(WORDS)]
     return [random.choice(WORDS) for _ in range(3)]
 
 

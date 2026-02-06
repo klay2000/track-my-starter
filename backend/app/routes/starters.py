@@ -202,9 +202,9 @@ async def create_descendant(words_param: str, data: StarterCreate):
     if not parent:
         raise HTTPException(status_code=404, detail="Parent starter not found")
 
-    words = generate_word_id(first_word=parent_words[0])
+    words = generate_word_id()
     while await db.starters.find_one({"words": words}):
-        words = generate_word_id(first_word=parent_words[0])
+        words = generate_word_id()
 
     doc = {
         "words": words,
