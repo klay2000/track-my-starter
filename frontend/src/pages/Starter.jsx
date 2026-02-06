@@ -133,7 +133,7 @@ export default function Starter({ apiUrl }) {
             <>
               {' · Descended from '}
               <Link to={`/${starter.parent_words.join('-')}`}>
-                {starter.parent_words.join('-')}
+                {tree?.nodes?.find(n => n.words.join('-') === starter.parent_words.join('-'))?.name || starter.parent_words.join('-')}
               </Link>
             </>
           )}

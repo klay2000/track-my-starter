@@ -122,7 +122,7 @@ export default function FamilyTree({ tree, currentWords, nodeColors = {} }) {
       const y = depth * nodeSpacingY
 
       const isCurrent = node.id === currentWords
-      const displayLabel = node.name || node.id.split('-').slice(1, 3).join('-')
+      const displayLabel = node.name || node.id
 
       flowNodes.push({
         id: node.id,

@@ -1,6 +1,6 @@
 # Track My Starter
 
-A vibe coded web app for tracking the distribution and lineage of fermented starters (sourdough, kefir, kombucha, etc.) around the world.
+A (mostly) vibe coded web app for tracking the distribution and lineage of fermented starters (sourdough, kefir, kombucha, etc.) around the world.
 
 ## Features
 
