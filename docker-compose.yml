@@ -13,6 +13,7 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
       - DATABASE_NAME=track_my_starter
+      - PORT=8000
     depends_on:
       - mongodb
     volumes:

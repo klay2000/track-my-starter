@@ -80,20 +80,18 @@ gcloud run deploy trackmystarter-api \
 
 ## 4. Deploy Frontend
 
-First, update the API URL in the frontend:
+The frontend needs the backend URL baked in at build time. Use the `cloudbuild.yaml` to pass it:
 
 ```bash
 cd frontend
 
-# Create production environment file
-echo "VITE_API_URL=https://trackmystarter-api-xxxxx-uc.a.run.app" > .env.production
-```
+# Get your backend URL
+BACKEND_URL=$(gcloud run services describe trackmystarter-api --region us-central1 --format="value(status.url)")
 
-Then build and deploy:
-
-```bash
-# Build and push the container
-gcloud builds submit --tag us-central1-docker.pkg.dev/trackmystarter/trackmystarter/frontend
+# Build and push the container with the API URL
+gcloud builds submit \
+  --config=cloudbuild.yaml \
+  --substitutions=_VITE_API_URL=$BACKEND_URL
 
 # Deploy to Cloud Run
 gcloud run deploy trackmystarter-web \
@@ -108,13 +106,25 @@ gcloud run deploy trackmystarter-web \
 
 ```bash
 # Map a custom domain
-gcloud run domain-mappings create \
+gcloud beta run domain-mappings create \
   --service trackmystarter-web \
-  --domain trackmystarter.com \
+  --domain yourdomain.com \
   --region us-central1
 ```
 
-Follow the DNS instructions provided to verify domain ownership.
+Get the required DNS records:
+
+```bash
+gcloud beta run domain-mappings describe --domain yourdomain.com --region us-central1
+```
+
+Add the A and AAAA records shown to your domain's DNS settings. Then wait for certificate provisioning (15-30 minutes). Check status with:
+
+```bash
+gcloud beta run domain-mappings describe --domain yourdomain.com --region us-central1 --format="yaml(status.conditions)"
+```
+
+When `CertificateProvisioned` status is `True`, your domain is ready.
 
 ## Cost Optimization
 
@@ -150,9 +160,10 @@ gcloud run deploy trackmystarter-api \
   --image us-central1-docker.pkg.dev/trackmystarter/trackmystarter/backend \
   --region us-central1
 
-# Frontend
+# Frontend (must include VITE_API_URL)
 cd frontend
-gcloud builds submit --tag us-central1-docker.pkg.dev/trackmystarter/trackmystarter/frontend
+BACKEND_URL=$(gcloud run services describe trackmystarter-api --region us-central1 --format="value(status.url)")
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_VITE_API_URL=$BACKEND_URL
 gcloud run deploy trackmystarter-web \
   --image us-central1-docker.pkg.dev/trackmystarter/trackmystarter/frontend \
   --region us-central1
@@ -171,6 +182,21 @@ gcloud run services logs read trackmystarter-web --region us-central1
 ```
 
 Or visit the [Cloud Run Console](https://console.cloud.google.com/run).
+
+## Local Development
+
+For local development, use the Vite dev server (not Docker):
+
+```bash
+# Start backend services
+docker compose up mongodb backend -d
+
+# Run frontend with hot reload
+cd frontend
+npm run dev
+```
+
+The Vite dev server proxies `/api` requests to the backend automatically.
 
 ## Troubleshooting
 

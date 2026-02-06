@@ -125,7 +125,8 @@
   .home-globe {
     width: 100%;
     max-width: 450px;
-    height: 450px;
+    height: auto;
+    aspect-ratio: 1;
   }
 }
 
@@ -149,10 +150,10 @@
   }
 
   .home-globe {
-    max-width: 100%;
     width: calc(100vw - 32px);
-    height: calc(100vw - 32px);
-    max-height: 350px;
+    max-width: 350px;
+    height: auto;
+    aspect-ratio: 1;
   }
 
   .home-tagline {
@@ -171,6 +172,6 @@
   }
 
   .home-globe {
-    max-height: 280px;
+    max-width: 280px;
   }
 }
