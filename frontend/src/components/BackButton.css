@@ -1,0 +1,19 @@
+.page-nav {
+  padding: 20px 24px;
+}
+
+.nav-back {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.nav-back:hover {
+  color: var(--color-accent-dark);
+}
+
+@media (max-width: 600px) {
+  .page-nav {
+    padding: 16px;
+  }
+}

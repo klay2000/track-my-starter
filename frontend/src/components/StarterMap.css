@@ -1,0 +1,17 @@
+/* Shared Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.leaflet-popup-content {
+  margin: 8px 10px;
+}
+
+.leaflet-popup-content p {
+  margin: 2px 0;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}

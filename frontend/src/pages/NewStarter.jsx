@@ -1,32 +1,14 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Marker, useMapEvents } from 'react-leaflet'
+import { STARTER_TYPES } from '../constants/starters'
+import { createMarkerIcon } from '../utils/markers'
+import BackButton from '../components/BackButton'
+import ErrorMessage from '../components/ErrorMessage'
+import StarterMap from '../components/StarterMap'
 import './NewStarter.css'
 
-// Custom marker icon
-const markerIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-      <circle cx="12" cy="12" r="10" fill="#d4a574" stroke="#b07d4f" stroke-width="2"/>
-      <circle cx="12" cy="12" r="4" fill="#b07d4f"/>
-    </svg>
-  `),
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-})
-
-const STARTER_TYPES = [
-  { value: 'sourdough', label: 'Sourdough' },
-  { value: 'friendship_bread', label: 'Friendship Bread' },
-  { value: 'kefir_milk', label: 'Kefir (Milk)' },
-  { value: 'kefir_water', label: 'Kefir (Water)' },
-  { value: 'kombucha', label: 'Kombucha' },
-  { value: 'ginger_bug', label: 'Ginger Bug' },
-  { value: 'jun', label: 'Jun' },
-  { value: 'other', label: 'Other' },
-]
+const locationMarkerIcon = createMarkerIcon('#d4a574', '#b07d4f')
 
 function LocationPicker({ onLocationSelect, selectedLocation }) {
   useMapEvents({
@@ -38,7 +20,7 @@ function LocationPicker({ onLocationSelect, selectedLocation }) {
   return selectedLocation ? (
     <Marker
       position={[selectedLocation.lat, selectedLocation.lng]}
-      icon={markerIcon}
+      icon={locationMarkerIcon}
     />
   ) : null
 }
@@ -113,11 +95,9 @@ export default function NewStarter({ apiUrl }) {
 
   return (
     <div className="new-starter-page">
-      <nav className="new-starter-nav">
-        <Link to={parentWords ? `/${parentWords}` : '/'} className="nav-back">
-          ← {parentWords ? 'Back to Parent' : 'Back to Home'}
-        </Link>
-      </nav>
+      <BackButton to={parentWords ? `/${parentWords}` : '/'}>
+        ← {parentWords ? 'Back to Parent' : 'Back to Home'}
+      </BackButton>
 
       <div className="new-starter-layout">
         <div className="new-starter-form">
@@ -130,7 +110,7 @@ export default function NewStarter({ apiUrl }) {
             )}
           </header>
 
-          {error && <div className="error-message">{error}</div>}
+          <ErrorMessage message={error} />
 
           <div className="form-group">
             <label htmlFor="name">Name <span className="optional">(optional)</span></label>
@@ -201,20 +181,12 @@ export default function NewStarter({ apiUrl }) {
         </div>
 
         <div className="new-starter-map">
-          <MapContainer
-            center={[30, 0]}
-            zoom={2}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+          <StarterMap center={[30, 0]} zoom={2}>
             <LocationPicker
               onLocationSelect={setLocation}
               selectedLocation={location}
             />
-          </MapContainer>
+          </StarterMap>
           {!location && (
             <div className="map-hint">
               Click anywhere on the map to set your location

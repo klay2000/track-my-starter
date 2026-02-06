@@ -2,13 +2,13 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Globe from 'react-globe.gl'
 import * as THREE from 'three'
+import { useFetch } from '../hooks/useFetch'
+import LoadingSpinner from '../components/LoadingSpinner'
 import './Home.css'
 
-// Fetch geographic data for stylized look
 const COUNTRIES_URL = 'https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson'
 const LAKES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_lakes.geojson'
 
-// Extract border paths from GeoJSON polygons
 function extractBorders(features) {
   const paths = []
   features.forEach((feature) => {
@@ -28,7 +28,7 @@ function extractBorders(features) {
   return paths
 }
 
-const STARTER_TYPES = [
+const ROTATING_TYPES = [
   'sourdough starter',
   'kombucha starter',
   'kefir starter',
@@ -43,30 +43,31 @@ function RotatingType() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTypeIndex((prev) => (prev + 1) % STARTER_TYPES.length)
+      setTypeIndex((prev) => (prev + 1) % ROTATING_TYPES.length)
     }, 5000)
     return () => clearInterval(interval)
   }, [])
 
   return (
     <span className="rotating-type">
-      <span key={typeIndex} className="rotating-type-text">{STARTER_TYPES[typeIndex]}</span>
+      <span key={typeIndex} className="rotating-type-text">{ROTATING_TYPES[typeIndex]}</span>
     </span>
   )
 }
 
 export default function Home({ apiUrl }) {
-  const [starters, setStarters] = useState([])
+  const { data: starters, loading: startersLoading } = useFetch(`${apiUrl}/api/starters`)
   const [countries, setCountries] = useState([])
   const [borders, setBorders] = useState([])
   const [lakes, setLakes] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [geoLoading, setGeoLoading] = useState(true)
   const [globeSize, setGlobeSize] = useState(550)
   const globeRef = useRef()
   const globeContainerRef = useRef()
   const navigate = useNavigate()
 
-  // Create globe material for ocean color
+  const loading = startersLoading || geoLoading
+
   const globeMaterial = useMemo(() => {
     return new THREE.MeshPhongMaterial({
       color: new THREE.Color('#7dd3fc'),
@@ -74,7 +75,6 @@ export default function Home({ apiUrl }) {
     })
   }, [])
 
-  // Update globe size on resize
   useEffect(() => {
     const updateSize = () => {
       if (globeContainerRef.current) {
@@ -90,33 +90,21 @@ export default function Home({ apiUrl }) {
   }, [loading])
 
   useEffect(() => {
-    // Load geographic data for polygon rendering
-    fetch(COUNTRIES_URL)
-      .then((res) => res.json())
-      .then((data) => {
-        setCountries(data.features)
-        setBorders(extractBorders(data.features))
-      })
-      .catch(console.error)
-
-    fetch(LAKES_URL)
-      .then((res) => res.json())
-      .then((data) => setLakes(data.features))
-      .catch(console.error)
-  }, [])
-
-  useEffect(() => {
-    fetch(`${apiUrl}/api/starters`)
-      .then((res) => res.json())
-      .then((data) => {
-        setStarters(data)
-        setLoading(false)
+    Promise.all([
+      fetch(COUNTRIES_URL).then((res) => res.json()),
+      fetch(LAKES_URL).then((res) => res.json()),
+    ])
+      .then(([countriesData, lakesData]) => {
+        setCountries(countriesData.features)
+        setBorders(extractBorders(countriesData.features))
+        setLakes(lakesData.features)
+        setGeoLoading(false)
       })
       .catch((err) => {
-        console.error('Failed to load starters:', err)
-        setLoading(false)
+        console.error('Failed to load geographic data:', err)
+        setGeoLoading(false)
       })
-  }, [apiUrl])
+  }, [])
 
   useEffect(() => {
     if (globeRef.current) {
@@ -128,8 +116,7 @@ export default function Home({ apiUrl }) {
     }
   }, [loading])
 
-
-  const pointsData = starters.map((s) => ({
+  const pointsData = (starters || []).map((s) => ({
     lat: s.location.coordinates[1],
     lng: s.location.coordinates[0],
     words: s.words.join('-'),
@@ -158,7 +145,7 @@ export default function Home({ apiUrl }) {
               Explore Map
             </Link>
           </div>
-          {!loading && starters.length > 0 && (
+          {!loading && starters && starters.length > 0 && (
             <p className="home-stats">
               {starters.length} starter{starters.length !== 1 ? 's' : ''} tracked worldwide
             </p>
@@ -167,10 +154,7 @@ export default function Home({ apiUrl }) {
 
         <div className="home-globe" ref={globeContainerRef}>
           {loading ? (
-            <div className="globe-loading">
-              <div className="loading-spinner" />
-              <p>Loading globe...</p>
-            </div>
+            <LoadingSpinner message="Loading globe..." />
           ) : (
             <Globe
               ref={globeRef}

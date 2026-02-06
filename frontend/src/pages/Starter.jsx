@@ -1,62 +1,22 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { TYPE_LABELS, NODE_COLORS } from '../constants/starters'
+import { createMarkerIcon } from '../utils/markers'
+import { buildNodeColors } from '../utils/tree'
+import LoadingSpinner from '../components/LoadingSpinner'
+import BackButton from '../components/BackButton'
+import StarterMap from '../components/StarterMap'
+import MapPopup from '../components/MapPopup'
 import FamilyTree from '../components/FamilyTree'
-import 'leaflet/dist/leaflet.css'
 import './Starter.css'
-
-// Distinct color palette for nodes
-const NODE_COLORS = [
-  { fill: '#f59e0b', stroke: '#d97706' }, // amber
-  { fill: '#10b981', stroke: '#059669' }, // emerald
-  { fill: '#8b5cf6', stroke: '#7c3aed' }, // violet
-  { fill: '#ec4899', stroke: '#db2777' }, // pink
-  { fill: '#06b6d4', stroke: '#0891b2' }, // cyan
-  { fill: '#f97316', stroke: '#ea580c' }, // orange
-  { fill: '#84cc16', stroke: '#65a30d' }, // lime
-  { fill: '#6366f1', stroke: '#4f46e5' }, // indigo
-  { fill: '#14b8a6', stroke: '#0d9488' }, // teal
-  { fill: '#ef4444', stroke: '#dc2626' }, // red
-  { fill: '#a855f7', stroke: '#9333ea' }, // purple
-  { fill: '#eab308', stroke: '#ca8a04' }, // yellow
-]
-
-// Create marker icon with custom colors
-function createMarkerIcon(fillColor, strokeColor, isCurrent = false) {
-  const size = isCurrent ? 36 : 28
-  const r = isCurrent ? 14 : 10
-  const innerR = isCurrent ? 6 : 4
-  const center = size / 2
-  return new L.Icon({
-    iconUrl: 'data:image/svg+xml,' + encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-        <circle cx="${center}" cy="${center}" r="${r}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${isCurrent ? 3 : 2}"/>
-        <circle cx="${center}" cy="${center}" r="${innerR}" fill="${strokeColor}"/>
-      </svg>
-    `),
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  })
-}
-
-const TYPE_LABELS = {
-  sourdough: 'Sourdough',
-  friendship_bread: 'Friendship Bread',
-  kefir_milk: 'Kefir (Milk)',
-  kefir_water: 'Kefir (Water)',
-  kombucha: 'Kombucha',
-  ginger_bug: 'Ginger Bug',
-  jun: 'Jun',
-  other: 'Other',
-}
 
 function FitBounds({ nodes, currentWords }) {
   const map = useMap()
   useEffect(() => {
     if (nodes.length === 0) return
 
-    // Find the current node and center on it
     const currentNode = nodes.find((n) => n.is_target)
     if (currentNode) {
       map.setView(
@@ -85,21 +45,12 @@ export default function Starter({ apiUrl }) {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
 
-  // Generate unique colors for each node
   const nodeColors = useMemo(() => {
     if (!tree?.nodes) return {}
-
-    const colors = {}
-    tree.nodes.forEach((node, index) => {
-      const nodeWords = node.words.join('-')
-      const color = NODE_COLORS[index % NODE_COLORS.length]
-      colors[nodeWords] = color
-    })
-    return colors
+    return buildNodeColors(tree.nodes)
   }, [tree])
 
   useEffect(() => {
-    // Only show loading spinner on initial load, not when switching starters
     if (!starter) {
       setLoading(true)
     }
@@ -132,10 +83,7 @@ export default function Starter({ apiUrl }) {
   if (loading) {
     return (
       <div className="starter-page">
-        <div className="starter-loading">
-          <div className="loading-spinner" />
-          <p>Loading starter...</p>
-        </div>
+        <LoadingSpinner message="Loading starter..." />
       </div>
     )
   }
@@ -167,11 +115,7 @@ export default function Starter({ apiUrl }) {
 
   return (
     <div className="starter-page">
-      <nav className="starter-nav">
-        <Link to="/" className="nav-back">
-          ← Back to Home
-        </Link>
-      </nav>
+      <BackButton to="/">← Back to Home</BackButton>
 
       <header className="starter-header">
         <div className="starter-title">
@@ -207,49 +151,30 @@ export default function Starter({ apiUrl }) {
       <div className="starter-content">
         <div className="starter-map-section">
           <div className="starter-map">
-            <MapContainer
-            center={position}
-            zoom={10}
-            scrollWheelZoom={true}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {tree && <FitBounds nodes={tree.nodes} currentWords={words} />}
-            {tree?.nodes.map((node) => {
-              const nodeWords = node.words.join('-')
-              const pos = [node.location.coordinates[1], node.location.coordinates[0]]
-              const isCurrent = node.is_target
-              const color = nodeColors[nodeWords] || NODE_COLORS[0]
-              const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
-              const hasName = !!node.name
-              const displayName = node.name || nodeWords
+            <StarterMap center={position} zoom={10}>
+              {tree && <FitBounds nodes={tree.nodes} currentWords={words} />}
+              {tree?.nodes.map((node) => {
+                const nodeWords = node.words.join('-')
+                const pos = [node.location.coordinates[1], node.location.coordinates[0]]
+                const isCurrent = node.is_target
+                const color = nodeColors[nodeWords] || NODE_COLORS[0]
+                const icon = createMarkerIcon(color.fill, color.stroke, isCurrent)
 
-              return (
-                <Marker key={nodeWords} position={pos} icon={icon}>
-                  <Popup>
-                    <div className="map-popup">
-                      <span className="popup-label" style={{ background: color.stroke }}>
-                        {isCurrent ? 'Current' : TYPE_LABELS[node.starter_type] || 'Starter'}
-                      </span>
-                      <p className="popup-name">{displayName}</p>
-                      {hasName && <p className="popup-words">{nodeWords}</p>}
-                      {!isCurrent && (
-                        <button
-                          className="popup-link"
-                          onClick={() => navigate(`/${nodeWords}`)}
-                        >
-                          View Details →
-                        </button>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              )
-            })}
-          </MapContainer>
+                return (
+                  <Marker key={nodeWords} position={pos} icon={icon}>
+                    <Popup>
+                      <MapPopup
+                        name={node.name}
+                        words={nodeWords}
+                        typeLabel={TYPE_LABELS[node.starter_type] || 'Starter'}
+                        color={color}
+                        isCurrent={isCurrent}
+                      />
+                    </Popup>
+                  </Marker>
+                )
+              })}
+            </StarterMap>
           </div>
         </div>
 
